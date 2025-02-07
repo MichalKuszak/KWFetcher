@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 # Custom files
 
 dane.txt
 main_backup.py
 test.py
 
+=======
+>>>>>>> af4c1e288e9f9ecdd61b6dd203ccc5c0581ab8c5
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -174,4 +177,8 @@ cython_debug/
 #.idea/
 
 # PyPI configuration file
+<<<<<<< HEAD
 .pypirc
+=======
+.pypirc
+>>>>>>> af4c1e288e9f9ecdd61b6dd203ccc5c0581ab8c5
