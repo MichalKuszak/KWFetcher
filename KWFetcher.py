@@ -20,7 +20,7 @@ class KWFetcher:
     def format_kw_no(self, full_kw_no) -> None:
         """This function formats the KW number given by the user into a list.
         The elements of the list can then be input on the KW website"""
-        kw_elements_list: list = full_kw_no.split("/")
+        kw_elements_list: list = full_kw_no.split("/").strip()
         self.department_code: str = kw_elements_list[0]
         self.number_KW: str = kw_elements_list[1]
         self.control_number: str = kw_elements_list[2]
@@ -29,7 +29,7 @@ class KWFetcher:
 class MainKW(KWFetcher):
     def __init__(self, full_kw_no) -> None:
         super().__init__(full_kw_no)
-        self.properties: list = None
+        self.residential_premises: list = None
 
         # Initialize the webdriver
         options = webdriver.ChromeOptions()
@@ -38,9 +38,10 @@ class MainKW(KWFetcher):
         self.driver = webdriver.Chrome(options=options)
 
         self.load_kw()
+        self.get_residential_premises()
 
     def load_kw(self) -> None:
-        """Loads the main screen of the KW"""
+        """Loads the main screen of the Land and Mortgage Register"""
         self.driver.get(
             "https://przegladarka-ekw.ms.gov.pl/eukw_prz/KsiegiWieczyste/wyszukiwanieKW?komunikaty=true&kontakt=true&okienkoSerwisowe=false")
 
@@ -96,4 +97,23 @@ class MainKW(KWFetcher):
         submit_button.click()
         time.sleep(SLEEP_TIME)
 
+    def get_residential_premises(self) -> list:
+        """Navigates to Section II of current KW,
+        fetches a list of residential premises with KWs maintained
+        and updates the residential_premises attribute"""
 
+        # Navigate to Section II
+        section_2 = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "/html/body/table[1]/tbody/tr/td[3]/form/input[7]")
+            )
+        )
+        section_2.click()
+
+        time.sleep(SLEEP_TIME)
+
+        # Get list of residential premises
+        premises_list = self.driver.find_elements(
+            By.XPATH, f"//td[@class='csDane'][contains(text(), '{self.department_code}')]"
+        )
+        self.residential_premises = [item.text for item in premises_list]
