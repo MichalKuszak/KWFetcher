@@ -34,7 +34,7 @@ class MainKW(KWFetcher):
         # Initialize the webdriver
         options = webdriver.ChromeOptions()
         options.add_experimental_option("detach", True)
-        # options.add_argument("--headless=new")
+        # options.add_argument("--headless=new") - NOT WORKING, WHY?
         self.driver = webdriver.Chrome(options=options)
 
         self.load_kw()
@@ -97,7 +97,7 @@ class MainKW(KWFetcher):
         submit_button.click()
         time.sleep(SLEEP_TIME)
 
-    def get_residential_premises(self) -> list:
+    def get_residential_premises(self) -> None:
         """Navigates to Section II of current KW,
         fetches a list of residential premises with KWs maintained
         and updates the residential_premises attribute"""
