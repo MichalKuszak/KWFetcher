@@ -33,7 +33,7 @@ class KWFetcher:
         self.load_kw()
 
     def format_kw_no(self, full_kw_no) -> None:
-        """This function formats the KW number given by the user into a list.
+        """Formats the KW number given by the user into a list.
         The elements of the list can then be input on the KW website"""
         kw_elements_list: list = [element.strip() for element in full_kw_no.split("/")]
         self.department_code: str = kw_elements_list[0]
@@ -99,15 +99,16 @@ class KWFetcher:
 
 
 class MainKW(KWFetcher):
+    """Grabs the list of residential units of a given land unit"""
     def __init__(self, full_kw_no) -> None:
         super().__init__(full_kw_no)
-        self.residential_premises: list = None
-        self.get_residential_premises()
+        self.residential_units: list = None
+        self.get_residential_units()
 
-    def get_residential_premises(self) -> list:
+    def get_residential_units(self) -> list:
         """Navigates to Section II of current KW,
-        fetches a list of residential premises with KWs maintained
-        and updates the residential_premises attribute"""
+        fetches a list of residential units with KWs maintained
+        and updates the residential_units attribute"""
 
         # Navigate to Section II
         section_2 = WebDriverWait(self.driver, 10).until(
@@ -119,8 +120,13 @@ class MainKW(KWFetcher):
 
         time.sleep(SLEEP_TIME)
 
-        # Get list of residential premises
-        premises_list = self.driver.find_elements(
+        # Get list of residential units
+        units_list = self.driver.find_elements(
             By.XPATH, f"//td[@class='csDane'][contains(text(), '{self.department_code}')]"
         )
-        self.residential_premises = [item.text for item in premises_list]
+        self.residential_units = [item.text for item in units_list]
+
+
+class ResidentialKW(KWFetcher):
+    pass
+
