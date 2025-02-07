@@ -1,10 +1,15 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from random import uniform
 import time
+import chromedriver_autoinstaller
+
+
+
 
 SLEEP_TIME = uniform(2, 6)
 
@@ -17,28 +22,23 @@ class KWFetcher:
         self.control_number: str = None
         self.format_kw_no(full_kw_no)
 
-    def format_kw_no(self, full_kw_no) -> None:
-        """This function formats the KW number given by the user into a list.
-        The elements of the list can then be input on the KW website"""
-        kw_elements_list: list = full_kw_no.split("/").strip()
-        self.department_code: str = kw_elements_list[0]
-        self.number_KW: str = kw_elements_list[1]
-        self.control_number: str = kw_elements_list[2]
-
-
-class MainKW(KWFetcher):
-    def __init__(self, full_kw_no) -> None:
-        super().__init__(full_kw_no)
-        self.residential_premises: list = None
-
         # Initialize the webdriver
+        chromedriver_autoinstaller.install()
+        service = Service()
         options = webdriver.ChromeOptions()
         options.add_experimental_option("detach", True)
         # options.add_argument("--headless=new")
-        self.driver = webdriver.Chrome(options=options)
+        self.driver = webdriver.Chrome(options=options, service=service)
 
         self.load_kw()
-        self.get_residential_premises()
+
+    def format_kw_no(self, full_kw_no) -> None:
+        """This function formats the KW number given by the user into a list.
+        The elements of the list can then be input on the KW website"""
+        kw_elements_list: list = [element.strip() for element in full_kw_no.split("/")]
+        self.department_code: str = kw_elements_list[0]
+        self.number_KW: str = kw_elements_list[1]
+        self.control_number: str = kw_elements_list[2]
 
     def load_kw(self) -> None:
         """Loads the main screen of the Land and Mortgage Register"""
@@ -90,12 +90,19 @@ class MainKW(KWFetcher):
         except:
             pass
         submit_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable(
-                    (By.NAME, "przyciskWydrukZwykly")
-                )
+            EC.element_to_be_clickable(
+                (By.NAME, "przyciskWydrukZwykly")
+            )
         )
         submit_button.click()
         time.sleep(SLEEP_TIME)
+
+
+class MainKW(KWFetcher):
+    def __init__(self, full_kw_no) -> None:
+        super().__init__(full_kw_no)
+        self.residential_premises: list = None
+        self.get_residential_premises()
 
     def get_residential_premises(self) -> list:
         """Navigates to Section II of current KW,
