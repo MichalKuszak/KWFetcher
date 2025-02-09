@@ -128,5 +128,68 @@ class MainKW(KWFetcher):
 
 
 class ResidentialKW(KWFetcher):
-    pass
+    "Grabs data on specific residential unit within the land unit"
+    def __init__(self, full_kw_no) -> None:
+        super().__init__(full_kw_no)
+        self.address: str = self.get_address()
 
+# data_list = []
+# counter = 0
+# with open("dane.txt", "w", encoding="utf-8") as file:
+#     for item in apt_kw_list:
+#
+#         # Wyswietl l.p. i nr KW
+#         counter += 1
+#         print(f"{counter}.")
+#         print(f"{item[0]}/{item[1]}/{item[2]}")
+#
+#         # Zapisz l.p. i nr KW do pliku
+#         file.write(f"{counter}\n")
+#         file.write(f"{item[0]}/{item[1]}/{item[2]}\n")
+
+    def get_address(self) -> str:
+        street = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located(
+                (By.XPATH, "/html/body/div/table[3]/tbody/tr[5]/td[4]")
+            )
+        ).text
+        flat_no = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located(
+                (By.XPATH, "/html/body/div/table[3]/tbody/tr[5]/td[5]")
+            )
+        ).text
+        apt_no = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located(
+                  (By.XPATH, "/html/body/div/table[3]/tbody/tr[5]/td[6]")
+            )
+        ).text
+        return f"{street.title()} {flat_no} lok. {apt_no}"
+
+#
+#
+#         driver.find_element(By.XPATH, "/html/body/table[1]/tbody/tr/td[3]/form/input[7]").click()
+#         time.sleep(3)
+#         owners = driver.find_elements(By.XPATH, '//td[2][@class = "csDane"]')
+#         owners_data_list = [item.text.title().strip().split(",") for item in owners[1::2]]
+#
+#         # Pobierz i zapisz nazwiska i PESELe wlascicieli
+#         for _ in owners_data_list:
+#             try:
+#                 print(f"{_[0]}\nPESEL:{_[3]}")
+#                 file.write(f"{_[0]}\nPESEL:{_[3]}")
+#             except IndexError:
+#                 print(f"{_[0]}\nPESEL:{_[1]}")
+#                 file.write(f"{_[0]}\nPESEL {_[1]}")
+#
+#             # Pobierz i zapisz tylko nazwiska wlascicieli
+#             # print(f"{_[0]}")
+#             # file.write(f"{_[0]}")
+#
+#         print("-" * 20)
+#         file.write("\n" + "-" * 20 + "\n")
+#         # property_dict = {"Adres": full_address,
+#         #                  "Wlasciciele": owners_data_list,
+#         #                  }
+#         # data_list.append(property_dict)
+#     # print(data_list)
+#
