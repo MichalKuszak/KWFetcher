@@ -8,9 +8,6 @@ from random import uniform
 import time
 import chromedriver_autoinstaller
 
-
-
-
 SLEEP_TIME = uniform(2, 6)
 
 
@@ -39,6 +36,7 @@ class KWFetcher:
         self.department_code: str = kw_elements_list[0]
         self.number_KW: str = kw_elements_list[1]
         self.control_number: str = kw_elements_list[2]
+    #   TODO: Verify the elements via exception handling and possibly regex?
 
     def load_kw(self) -> None:
         """Loads the main screen of the Land and Mortgage Register"""
@@ -100,10 +98,10 @@ class KWFetcher:
 
 class MainKW(KWFetcher):
     """Grabs the list of residential units of a given land unit"""
+
     def __init__(self, full_kw_no) -> None:
         super().__init__(full_kw_no)
-        self.residential_units: list = None
-        self.get_residential_units()
+        self.residential_units: list = self.get_residential_units()
 
     def get_residential_units(self) -> list:
         """Navigates to Section II of current KW,
@@ -124,28 +122,15 @@ class MainKW(KWFetcher):
         units_list = self.driver.find_elements(
             By.XPATH, f"//td[@class='csDane'][contains(text(), '{self.department_code}')]"
         )
-        self.residential_units = [item.text for item in units_list]
+        return [item.text for item in units_list]
 
 
 class ResidentialKW(KWFetcher):
-    "Grabs data on specific residential unit within the land unit"
+    """Grabs data on specific residential unit within the land unit"""
     def __init__(self, full_kw_no) -> None:
         super().__init__(full_kw_no)
         self.address: str = self.get_address()
-
-# data_list = []
-# counter = 0
-# with open("dane.txt", "w", encoding="utf-8") as file:
-#     for item in apt_kw_list:
-#
-#         # Wyswietl l.p. i nr KW
-#         counter += 1
-#         print(f"{counter}.")
-#         print(f"{item[0]}/{item[1]}/{item[2]}")
-#
-#         # Zapisz l.p. i nr KW do pliku
-#         file.write(f"{counter}\n")
-#         file.write(f"{item[0]}/{item[1]}/{item[2]}\n")
+        self.owner_data = self.get_owners_data()
 
     def get_address(self) -> str:
         street = WebDriverWait(self.driver, 10).until(
@@ -163,33 +148,42 @@ class ResidentialKW(KWFetcher):
                   (By.XPATH, "/html/body/div/table[3]/tbody/tr[5]/td[6]")
             )
         ).text
+
+        time.sleep(SLEEP_TIME)
+
         return f"{street.title()} {flat_no} lok. {apt_no}"
 
-#
-#
-#         driver.find_element(By.XPATH, "/html/body/table[1]/tbody/tr/td[3]/form/input[7]").click()
-#         time.sleep(3)
-#         owners = driver.find_elements(By.XPATH, '//td[2][@class = "csDane"]')
-#         owners_data_list = [item.text.title().strip().split(",") for item in owners[1::2]]
-#
-#         # Pobierz i zapisz nazwiska i PESELe wlascicieli
-#         for _ in owners_data_list:
-#             try:
-#                 print(f"{_[0]}\nPESEL:{_[3]}")
-#                 file.write(f"{_[0]}\nPESEL:{_[3]}")
-#             except IndexError:
-#                 print(f"{_[0]}\nPESEL:{_[1]}")
-#                 file.write(f"{_[0]}\nPESEL {_[1]}")
-#
-#             # Pobierz i zapisz tylko nazwiska wlascicieli
-#             # print(f"{_[0]}")
-#             # file.write(f"{_[0]}")
-#
-#         print("-" * 20)
-#         file.write("\n" + "-" * 20 + "\n")
-#         # property_dict = {"Adres": full_address,
-#         #                  "Wlasciciele": owners_data_list,
-#         #                  }
-#         # data_list.append(property_dict)
-#     # print(data_list)
-#
+    def get_owners_data(self) -> dict:
+        """Navigates to Section II of current KW,
+        fetches a list of owners and their personal data
+        and updates the residential_units attribute"""
+
+        # Navigate to Section II
+        section_2 = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "/html/body/table[1]/tbody/tr/td[3]/form/input[7]")
+            )
+        )
+        section_2.click()
+
+        # Get owners' data
+        owners = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, '//td[2][@class = "csDane"]')
+            )
+        )
+        raw_owners_data: list = [item.text.title().strip().split(",") for item in owners[1::2]]
+
+        # Format the owners' data to a dict
+        formatted_owners_data_list: list = []
+        for owner in raw_owners_data:
+            owner_data: dict = {
+                "name": owner[0],
+                "father_name": owner[1].strip(),
+                "mother_name": owner[2].strip(),
+                "pesel": owner[3].strip()
+            }
+            formatted_owners_data_list.append(owner_data)
+        return {
+            "owners": [owner for owner in formatted_owners_data_list],
+        }
